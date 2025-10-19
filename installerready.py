@@ -39,8 +39,11 @@ class InstallerApp(tk.Tk):
             messagebox.showerror("Error", "Please choose an install directory.")
             return
 
-        # Assume the installer EXE is in the repo folder
-        source_path = os.path.dirname(os.path.abspath(sys.executable if getattr(sys, 'frozen', False) else __file__))
+        # The folder where the EXE or script is running from
+        source_path = os.path.dirname(os.path.abspath(
+            sys.executable if getattr(sys, 'frozen', False) else __file__
+        ))
+
         threading.Thread(target=self.run_install, args=(source_path, install_path), daemon=True).start()
 
     def run_install(self, source, destination):
@@ -48,26 +51,44 @@ class InstallerApp(tk.Tk):
             self.status.config(text="Installing files...")
             os.makedirs(destination, exist_ok=True)
 
-            files = [f for f in os.listdir(source) if os.path.isfile(os.path.join(source, f))]
-            total = len(files)
+            # Build a list of all files to copy (excluding installer-related ones and _internal folders)
+            exclude_files = {
+                "installerready.exe",
+                "installerready.py",
+                "installerready.spec",
+                "__pycache__",
+                ".spec",
+            }
+
+            files_to_copy = []
+            for root, dirs, files in os.walk(source):
+                # Skip any _internal folders
+                dirs[:] = [d for d in dirs if d.lower() != "_internal"]
+
+                for f in files:
+                    if any(f.lower().endswith(ext) for ext in [".spec", ".pyc"]):
+                        continue
+                    if f.lower() in exclude_files:
+                        continue
+                    full_path = os.path.join(root, f)
+                    rel_path = os.path.relpath(full_path, source)
+                    files_to_copy.append((full_path, os.path.join(destination, rel_path)))
+
+            total = len(files_to_copy)
             count = 0
 
-            for file in files:
-                if file.lower() == "installerready.exe":
-                    continue  # Skip itself
-
-                src_file = os.path.join(source, file)
-                dest_file = os.path.join(destination, file)
-                shutil.copy2(src_file, dest_file)
-
+            # Copy files recursively with progress
+            for src, dest in files_to_copy:
+                os.makedirs(os.path.dirname(dest), exist_ok=True)
+                shutil.copy2(src, dest)
                 count += 1
                 self.progress["value"] = (count / total) * 100
                 self.update_idletasks()
-                time.sleep(0.2)
+                time.sleep(0.05)
 
             self.status.config(text="✅ Installation complete!")
 
-            # Optionally create desktop shortcut (Windows only)
+            # Create optional desktop shortcut (Windows only)
             self.create_shortcut(destination)
 
             messagebox.showinfo("Success", "Installation finished successfully!")
@@ -81,8 +102,15 @@ class InstallerApp(tk.Tk):
             desktop = os.path.join(os.path.expanduser("~"), "Desktop")
             shortcut_path = os.path.join(desktop, "MyApp.lnk")
 
-            target = os.path.join(target_folder, "main.py")
-            if not os.path.exists(target):
+            # Detect main file to link (e.g., main.py or main.exe)
+            target = None
+            for candidate in ["main.py", "main.exe"]:
+                cand_path = os.path.join(target_folder, candidate)
+                if os.path.exists(cand_path):
+                    target = cand_path
+                    break
+
+            if not target:
                 return
 
             import pythoncom
