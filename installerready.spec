@@ -1,25 +1,26 @@
-# installerready.spec
-# Build this using: pyinstaller installerready.spec
-
-from PyInstaller.utils.hooks import collect_submodules, collect_data_files
-from PyInstaller.building.build_main import Analysis, PYZ, EXE, COLLECT
+# -*- mode: python ; coding: utf-8 -*-
 
 block_cipher = None
 
-# ---- Collect any additional modules ----
-hiddenimports = collect_submodules('tkinter')
-hiddenimports += collect_submodules('win32com')
-hiddenimports += collect_submodules('pythoncom')
-
 a = Analysis(
-    ['installerready.py'],
+    ['InstallerReady.py'],
     pathex=[],
     binaries=[],
-    datas=collect_data_files('tkinter'),
-    hiddenimports=hiddenimports,
+    datas=[],
+    hiddenimports=[
+        'customtkinter',
+        'tkinter',
+        'requests',
+        'os',
+        'zipfile',
+        'io',
+        're',
+        'subprocess',
+        'threading',
+    ],
     hookspath=[],
     runtime_hooks=[],
-    excludes=[],
+    excludes=['_internal'],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
@@ -32,12 +33,12 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='installerready',
+    name='InstallerReady',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=False,           # GUI app, no console window
+    console=False,
 )
 
 coll = COLLECT(
@@ -47,5 +48,6 @@ coll = COLLECT(
     a.datas,
     strip=False,
     upx=True,
+    upx_exclude=[],
     name='InstallerReady'
 )
