@@ -20,7 +20,7 @@ jobs:
       run: pip install -r requirements.txt
     - name: Install pyinstaller
       run: pip install git+https://github.com/pyinstaller/pyinstaller.git@develop
-    - name: Build Installer
+    - name: Build InstallerReady
       run: pyinstaller installerready.spec
     - name: Publish Build Artifacts
       uses: actions/upload-artifact@master
