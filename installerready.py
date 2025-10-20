@@ -7,7 +7,7 @@ import requests
 import io
 
 # Version
-VERSION = "0.3"
+VERSION = "0.4"
 
 class InstallerReadyApp(ctk.CTk):
     def __init__(self):
