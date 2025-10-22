@@ -29,3 +29,23 @@ jobs:
       with:
         name: '${{ matrix.os }}-GUI'
         path: dist
+            - name: discord-webhook
+  # You may pin to the exact commit or the version.
+  # uses: johnnyhuy/actions-discord-git-webhook@ba54912b26910da886c9095317d6da6182a87224
+  uses: johnnyhuy/actions-discord-git-webhook@v1.0.0
+  with:
+    # Discord webhook URL
+    webhook_url: # https://discord.com/api/webhooks/1430680173270798358/S7QU7E5BnUMqP9N9AYEIpNImwdMd_tQP08W21o_BBs7AnQaG2UyO7y2LBO9Pu7E6e1jD
+    # Discord Webhook ID (ignored if `webhook_url` is set)
+    id: # optional
+    # Discord Webhook token (ignored if `webhook_url` is set)
+    token: # optional
+    # Overwrite repository name with a custom one
+    repo_name: # optional
+    # Hide the full GitHub username
+    censor_username: # optional
+    # Toggle whether to show repo links on the webhook event
+    hide_links: # optional
+    # Color of the Discord embed
+    color: # optional, default is 7dbbe6
+          
