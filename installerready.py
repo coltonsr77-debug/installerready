@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox, filedialog
+from tkinter import ttk, messagebox, filedialog
 import threading
 import requests
 import os
@@ -8,16 +8,16 @@ import io
 import re
 import subprocess
 
-VERSION = "0.4"
+VERSION = "0.3"
 OWNER = "coltonsr77"
 API_BASE = f"https://api.github.com/users/{OWNER}/repos"
 
 
-class InstallerReadyApp(ctk.CTk):
+class InstallerReadyApp(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title(f"InstallerReady v{VERSION}")
-        self.geometry("700x500")
+        self.geometry("750x550")
         self.resizable(False, False)
         self.install_path = os.getcwd()
         self.projects = []
@@ -25,49 +25,67 @@ class InstallerReadyApp(ctk.CTk):
         self.load_projects()
 
     def create_tabs(self):
-        self.tabview = ctk.CTkTabview(self)
-        self.tabview.pack(fill="both", expand=True, padx=10, pady=10)
+        notebook = ttk.Notebook(self)
+        notebook.pack(fill="both", expand=True, padx=10, pady=10)
 
         # Tabs
-        self.tab_github = self.tabview.add("Install from GitHub")
-        self.tab_myprojects = self.tabview.add("My Projects")
-        self.tab_about = self.tabview.add("About")
+        self.tab_github = ttk.Frame(notebook)
+        self.tab_myprojects = ttk.Frame(notebook)
+        self.tab_about = ttk.Frame(notebook)
+
+        notebook.add(self.tab_github, text="Install from GitHub")
+        notebook.add(self.tab_myprojects, text="My Projects")
+        notebook.add(self.tab_about, text="About")
 
         self.create_github_tab()
         self.create_myprojects_tab()
         self.create_about_tab()
 
     def create_github_tab(self):
-        ctk.CTkLabel(self.tab_github, text="Install from GitHub URL", font=("Arial", 18, "bold")).pack(pady=10)
-        self.repo_entry = ctk.CTkEntry(self.tab_github, placeholder_text="Enter GitHub repository URL...")
-        self.repo_entry.pack(padx=20, pady=10, fill="x")
+        tk.Label(self.tab_github, text="Install from GitHub URL", font=("Arial", 16, "bold")).pack(pady=10)
+        self.repo_entry = tk.Entry(self.tab_github, width=60)
+        self.repo_entry.insert(0, "Enter GitHub repository URL...")
+        self.repo_entry.pack(padx=20, pady=10)
 
-        ctk.CTkButton(self.tab_github, text="Select Install Folder", command=self.select_folder).pack(pady=5)
-        self.folder_label = ctk.CTkLabel(self.tab_github, text=f"Install Path: {self.install_path}")
+        tk.Button(self.tab_github, text="Select Install Folder", command=self.select_folder).pack(pady=5)
+        self.folder_label = tk.Label(self.tab_github, text=f"Install Path: {self.install_path}")
         self.folder_label.pack()
 
-        self.progress = ctk.CTkProgressBar(self.tab_github, width=400)
-        self.progress.set(0)
+        # Progress bar
+        self.progress = ttk.Progressbar(self.tab_github, length=400, mode='determinate')
         self.progress.pack(pady=20)
-        self.progress_label = ctk.CTkLabel(self.tab_github, text="Ready")
+        self.progress_label = tk.Label(self.tab_github, text="Ready")
         self.progress_label.pack()
 
-        ctk.CTkButton(self.tab_github, text="Install", command=self.start_install_from_url).pack(pady=10)
+        tk.Button(self.tab_github, text="Install", command=self.start_install_from_url).pack(pady=10)
 
     def create_myprojects_tab(self):
-        ctk.CTkLabel(self.tab_myprojects, text="My GitHub Projects", font=("Arial", 18, "bold")).pack(pady=10)
-        self.projects_frame = ctk.CTkScrollableFrame(self.tab_myprojects, width=650, height=350)
-        self.projects_frame.pack(padx=10, pady=5, fill="both", expand=True)
-        ctk.CTkButton(self.tab_myprojects, text="Refresh List", command=self.load_projects).pack(pady=5)
+        tk.Label(self.tab_myprojects, text="My GitHub Projects", font=("Arial", 16, "bold")).pack(pady=10)
+        self.canvas = tk.Canvas(self.tab_myprojects)
+        self.scrollbar = ttk.Scrollbar(self.tab_myprojects, orient="vertical", command=self.canvas.yview)
+        self.scrollable_frame = tk.Frame(self.canvas)
+
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+        )
+
+        self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+
+        self.canvas.pack(side="left", fill="both", expand=True)
+        self.scrollbar.pack(side="right", fill="y")
+
+        tk.Button(self.tab_myprojects, text="Refresh List", command=self.load_projects).pack(pady=5)
 
     def create_about_tab(self):
         text = (
             f"InstallerReady v{VERSION}\n\n"
-            "Created by Colton Robertson\n\n"
+            "Created by Coltonsr77\n\n"
             "Use this tool to install GitHub projects easily.\n"
             "You can install any repository via URL or from your own projects list."
         )
-        ctk.CTkLabel(self.tab_about, text=text, justify="left").pack(padx=20, pady=20)
+        tk.Label(self.tab_about, text=text, justify="left", wraplength=700).pack(padx=20, pady=20)
 
     def select_folder(self):
         path = filedialog.askdirectory()
@@ -76,14 +94,14 @@ class InstallerReadyApp(ctk.CTk):
             self.folder_label.configure(text=f"Install Path: {self.install_path}")
 
     def update_progress(self, value, text):
-        self.progress.set(value)
+        self.progress["value"] = value * 100
         self.progress_label.configure(text=text)
         self.update_idletasks()
 
     def start_install_from_url(self):
         url = self.repo_entry.get().strip()
-        if not url:
-            messagebox.showwarning("Missing URL", "Please enter a GitHub repository URL.")
+        if not url or url.lower().startswith("enter github"):
+            messagebox.showwarning("Missing URL", "Please enter a valid GitHub repository URL.")
             return
         threading.Thread(target=self.download_and_extract, args=(url,), daemon=True).start()
 
@@ -98,6 +116,7 @@ class InstallerReadyApp(ctk.CTk):
             zip_url = f"{repo_url}/archive/refs/heads/main.zip"
             r = requests.get(zip_url, stream=True)
             r.raise_for_status()
+
             total = int(r.headers.get("content-length", 0))
             downloaded = 0
             buffer = io.BytesIO()
@@ -112,6 +131,7 @@ class InstallerReadyApp(ctk.CTk):
             buffer.seek(0)
             with zipfile.ZipFile(buffer) as zip_ref:
                 zip_ref.extractall(self.install_path)
+
             self.update_progress(1.0, "Done!")
             messagebox.showinfo("Installed", f"{repo_name} installed successfully!")
         except Exception as e:
@@ -119,10 +139,10 @@ class InstallerReadyApp(ctk.CTk):
             self.update_progress(0, "Error")
 
     def load_projects(self):
-        for widget in self.projects_frame.winfo_children():
+        for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
 
-        ctk.CTkLabel(self.projects_frame, text="Loading projects...", font=("Arial", 14)).pack(pady=20)
+        tk.Label(self.scrollable_frame, text="Loading projects...", font=("Arial", 14)).pack(pady=20)
         threading.Thread(target=self.fetch_projects, daemon=True).start()
 
     def fetch_projects(self):
@@ -132,23 +152,23 @@ class InstallerReadyApp(ctk.CTk):
             self.projects = r.json()
             self.display_projects()
         except Exception as e:
-            for widget in self.projects_frame.winfo_children():
+            for widget in self.scrollable_frame.winfo_children():
                 widget.destroy()
-            ctk.CTkLabel(self.projects_frame, text=f"Error loading projects: {e}", text_color="red").pack(pady=20)
+            tk.Label(self.scrollable_frame, text=f"Error loading projects: {e}", fg="red").pack(pady=20)
 
     def display_projects(self):
-        for widget in self.projects_frame.winfo_children():
+        for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
 
         for project in self.projects:
-            frame = ctk.CTkFrame(self.projects_frame)
+            frame = tk.Frame(self.scrollable_frame, relief="ridge", borderwidth=2)
             frame.pack(fill="x", padx=10, pady=5)
 
             name = project.get("name", "Unnamed")
             desc = project.get("description", "No description provided.")
-            ctk.CTkLabel(frame, text=name, font=("Arial", 14, "bold")).pack(anchor="w", padx=10, pady=2)
-            ctk.CTkLabel(frame, text=desc, wraplength=600, justify="left").pack(anchor="w", padx=10)
-            ctk.CTkButton(frame, text="Install", command=lambda n=name: self.start_install_project(n)).pack(pady=5)
+            tk.Label(frame, text=name, font=("Arial", 14, "bold")).pack(anchor="w", padx=10, pady=2)
+            tk.Label(frame, text=desc, wraplength=650, justify="left").pack(anchor="w", padx=10)
+            tk.Button(frame, text="Install", command=lambda n=name: self.start_install_project(n)).pack(pady=5)
 
     def get_repo_name(self, repo_url):
         match = re.search(r"github\.com/[^/]+/([^/]+)", repo_url)
@@ -160,4 +180,3 @@ class InstallerReadyApp(ctk.CTk):
 if __name__ == "__main__":
     app = InstallerReadyApp()
     app.mainloop()
-
