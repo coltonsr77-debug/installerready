@@ -2,41 +2,46 @@ name: Build
 permissions:
   contents: read
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
+      - master
 
 jobs:
-  Build:
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [windows-latest]
 
     steps:
-    - name: Obtain latest version of the repository
-      uses: actions/checkout@v1
-    - name: Set up Python 3
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.13.x'
-    - name: Install requirements with PIP
-      run: pip install -r requirements.txt
-    - name: Install pyinstaller
-      run: pip install git+https://github.com/pyinstaller/pyinstaller.git@develop
-    - name: Build InstallerReady 0.4
-      run: pyinstaller installerready.spec
-    - name: Publish Build Artifacts
-      uses: actions/upload-artifact@master
-      with:
-        name: '${{ matrix.os }}-GUI'
-        path: dist
-       - name: discord-webhook
-  uses: johnnyhuy/actions-discord-git-webhook@v1.0.0
-  with:
-    webhook_url: # https://discord.com/api/webhooks/1430680173270798358/S7QU7E5BnUMqP9N9AYEIpNImwdMd_tQP08W21o_BBs7AnQaG2UyO7y2LBO9Pu7E6e1jD
-    id: # optional
-    token: # optional
-    repo_name: # optional
-    censor_username: # optional
-    hide_links: # optional
-    color: # optional, default is 7dbbe6
-          
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.13.x'
+
+      - name: Install requirements with PIP
+        run: pip install -r requirements.txt
+
+      - name: Install pyinstaller
+        run: pip install git+https://github.com/pyinstaller/pyinstaller.git@develop
+
+      - name: Build InstallerReady 0.4
+        run: pyinstaller installerready.spec
+
+      - name: Publish Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-GUI
+          path: dist
+
+      - name: Discord webhook notification (optional)
+        uses: johnnyhuy/actions-discord-git-webhook@v1.0.0
+        with:
+          webhook_url: ${{ secrets.DISCORD_WEBHOOK }}
+          repo_name: ${{ github.repository }}
+          hide_links: false
