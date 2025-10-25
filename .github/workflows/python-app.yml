@@ -38,10 +38,3 @@ jobs:
         with:
           name: ${{ matrix.os }}-GUI
           path: dist
-
-      - name: Discord webhook notification (optional)
-        uses: johnnyhuy/actions-discord-git-webhook@v1.0.0
-        with:
-          webhook_url: ${{ secrets.DISCORD_WEBHOOK }}
-          repo_name: ${{ github.repository }}
-          hide_links: false
