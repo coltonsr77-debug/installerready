@@ -8,7 +8,7 @@ import io
 import re
 import subprocess
 
-VERSION = "0.3"
+VERSION = "0.4"
 OWNER = "coltonsr77"
 API_BASE = f"https://api.github.com/users/{OWNER}/repos"
 
@@ -83,7 +83,7 @@ class InstallerReadyApp(tk.Tk):
             f"InstallerReady v{VERSION}\n\n"
             "Created by Coltonsr77\n\n"
             "Use this tool to install GitHub projects easily.\n"
-            "You can install any repository via URL or from your own projects list."
+            "You can install any repository via URL or from my own projects list."
         )
         tk.Label(self.tab_about, text=text, justify="left", wraplength=700).pack(padx=20, pady=20)
 
