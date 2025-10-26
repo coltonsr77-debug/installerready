@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="InstallerReady",
-    version="0.4",
+    version="0.5",
     author="coltonsr77",
     author_email="coltonsr77@gmail.com",  # replace with your email
     description="A simple Tkinter GitHub project installer",
@@ -21,7 +21,7 @@ setup(
     license="MIT",
     packages=find_packages(),
     install_requires=["requests"],
-    python_requires=">=3.8",
+    python_requires=">=3.10",
     entry_points={
         "gui_scripts": [
             "installerready=installerready.app:main",
