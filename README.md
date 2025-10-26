@@ -6,4 +6,4 @@ https://github.com/coltonsr77/Python3-windows-installer uses InstallerReady as a
 
 ## Installation
 ```bash
-pip install installerready
+pip install InstallerReady
