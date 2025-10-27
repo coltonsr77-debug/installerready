@@ -1,4 +1,4 @@
 pywin32
 pypiwin32
 requests
-kitecmd-IR
+kitecmd-IR==0.2
