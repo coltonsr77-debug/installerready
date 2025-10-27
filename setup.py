@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="InstallerReady",
-    version="0.8",
+    version="0.9",
     author="coltonsr77",
     description="A Tkinter GitHub project installer",
     long_description=open("README.md", encoding="utf-8").read(),
